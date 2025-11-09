@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../models/pokemon_card.dart';
 import '../services/pokemon_service.dart';
 import '../services/favorites_service.dart';
@@ -252,27 +253,74 @@ class _CardListScreenState extends State<CardListScreen> with SingleTickerProvid
   }
 
   Widget _buildBody() {
-    // Show loading indicator
+    // Show shimmer loading skeleton
     if (_isLoading) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text(
-                'Loading Pokémon cards...',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      return ListView.builder(
+        itemCount: 6, // Show 6 skeleton cards
+        padding: const EdgeInsets.all(8),
+        itemBuilder: (context, index) {
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Card(
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    // Skeleton card image
+                    Container(
+                      width: 100,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Skeleton text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 20,
+                            width: double.infinity,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            height: 30,
+                            width: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            height: 14,
+                            width: 120,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     }
 
@@ -408,11 +456,20 @@ class _CardListScreenState extends State<CardListScreen> with SingleTickerProvid
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            // Navigate to detail screen when card is tapped
+            // Navigate to detail screen with smooth page transition
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => CardDetailScreen(card: card),
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => CardDetailScreen(card: card),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOutCubic;
+                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+                  return SlideTransition(position: offsetAnimation, child: child);
+                },
+                transitionDuration: const Duration(milliseconds: 400),
               ),
             );
           },
@@ -541,21 +598,32 @@ class _CardListScreenState extends State<CardListScreen> with SingleTickerProvid
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      _favoriteIds.contains(card.id) ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.red,
-                    ),
-                    onPressed: () async {
-                      final favoritesService = FavoritesService();
-                      final isFavorite = await favoritesService.toggleFavorite(card.id);
-                      setState(() {
-                        if (isFavorite) {
-                          _favoriteIds.add(card.id);
-                        } else {
-                          _favoriteIds.remove(card.id);
-                        }
-                      });
+                  TweenAnimationBuilder<double>(
+                    key: ValueKey(_favoriteIds.contains(card.id)),
+                    duration: const Duration(milliseconds: 200),
+                    tween: Tween(begin: 0.8, end: 1.0),
+                    curve: Curves.elasticOut,
+                    builder: (context, scale, child) {
+                      return Transform.scale(
+                        scale: scale,
+                        child: IconButton(
+                          icon: Icon(
+                            _favoriteIds.contains(card.id) ? Icons.favorite : Icons.favorite_border,
+                            color: Colors.red,
+                          ),
+                          onPressed: () async {
+                            final favoritesService = FavoritesService();
+                            final isFavorite = await favoritesService.toggleFavorite(card.id);
+                            setState(() {
+                              if (isFavorite) {
+                                _favoriteIds.add(card.id);
+                              } else {
+                                _favoriteIds.remove(card.id);
+                              }
+                            });
+                          },
+                        ),
+                      );
                     },
                   ),
                 ],

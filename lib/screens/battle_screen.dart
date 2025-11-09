@@ -13,7 +13,7 @@ class BattleScreen extends StatefulWidget {
   State<BattleScreen> createState() => _BattleScreenState();
 }
 
-class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderStateMixin {
+class _BattleScreenState extends State<BattleScreen> {
   final PokemonService _pokemonService = PokemonService();
   final FavoritesService _favoritesService = FavoritesService();
   
@@ -22,27 +22,11 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
   PokemonCard? _selectedCard2;
   bool _isLoading = true;
   Set<String> _favoriteIds = {};
-  
-  late AnimationController _animationController;
-  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 5),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
-    
     _loadCards();
-  }
-  
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadCards() async {
@@ -83,48 +67,203 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
     }
   }
 
+  // NEW FEATURE: Load two random cards and compare HP (Assignment requirement)
+  // This implements: "Use the Pokémon TCG API to load two random pictures"
+  // and "Check the HP for each picture and declare the winner among the two cards"
+  void _loadRandomBattle() {
+    if (_allCards.isEmpty) return;
+    
+    // Get two random cards from the loaded cards
+    _allCards.shuffle();
+    final card1 = _allCards[0];
+    final card2 = _allCards[1];
+    
+    setState(() {
+      _selectedCard1 = card1;
+      _selectedCard2 = card2;
+    });
+    
+    // Show winner announcement after cards are displayed
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _showWinnerDialog();
+    });
+  }
+
+  // Show dialog announcing the winner based on HP comparison
+  void _showWinnerDialog() {
+    if (_selectedCard1 == null || _selectedCard2 == null) return;
+    
+    // Parse HP values (default to 0 if HP is null or invalid)
+    final hp1 = int.tryParse(_selectedCard1!.hp ?? '0') ?? 0;
+    final hp2 = int.tryParse(_selectedCard2!.hp ?? '0') ?? 0;
+    
+    // Determine winner based on HP comparison
+    String winner;
+    String message;
+    
+    if (hp1 > hp2) {
+      winner = _selectedCard1!.name;
+      message = '${_selectedCard1!.name} wins with higher HP!';
+    } else if (hp2 > hp1) {
+      winner = _selectedCard2!.name;
+      message = '${_selectedCard2!.name} wins with higher HP!';
+    } else {
+      winner = 'Tie';
+      message = 'It\'s a tie! Both cards have equal HP.';
+    }
+    
+    // Show winner announcement dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+            const SizedBox(width: 8),
+            Text(winner == 'Tie' ? 'Tie Game!' : 'Winner!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            // Show HP comparison
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              _selectedCard1!.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'HP: ${hp1}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: hp1 > hp2 ? Colors.green : (hp1 == hp2 ? Colors.orange : Colors.red),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('VS', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              _selectedCard2!.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'HP: ${hp2}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: hp2 > hp1 ? Colors.green : (hp1 == hp2 ? Colors.orange : Colors.red),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadRandomBattle(); // Battle again!
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Battle Again!'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.themeMode == ThemeMode.dark;
     
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        final color1 = isDark ? Colors.deepPurple : Colors.red;
-        final color2 = isDark ? Colors.blue : Colors.orange;
-        final color3 = isDark ? Colors.teal : Colors.yellow;
-        
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(color1, color2, _animation.value)!,
-                Color.lerp(color2, color3, _animation.value)!,
-                Color.lerp(color3, color1, _animation.value)!,
+    // Stable gradient background - no animation
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark 
+            ? [
+                Colors.deepPurple.shade900,
+                Colors.indigo.shade800,
+                Colors.blue.shade900,
+              ]
+            : [
+                Colors.red.shade400,
+                Colors.orange.shade300,
+                Colors.amber.shade200,
               ],
-            ),
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              title: const Text('Battle'),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color.lerp(color1, color2, _animation.value)!.withOpacity(0.8),
-                      Color.lerp(color2, color3, _animation.value)!.withOpacity(0.8),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Battle'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                  ? [
+                      Colors.deepPurple.shade800.withOpacity(0.8),
+                      Colors.indigo.shade700.withOpacity(0.8),
+                    ]
+                  : [
+                      Colors.red.shade600.withOpacity(0.8),
+                      Colors.orange.shade500.withOpacity(0.8),
                     ],
-                  ),
-                ),
               ),
             ),
+          ),
+        ),
             body: _isLoading
                 ? Center(
                     child: Container(
@@ -223,11 +362,44 @@ class _BattleScreenState extends State<BattleScreen> with SingleTickerProviderSt
                             ],
                           ),
                         ),
+                      
+                      // NEW: Random Battle Button (Assignment requirement)
+                      // This implements: "Add a button to your application. Clicking this button will load two random pictures again"
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _loadRandomBattle,
+                              icon: const Icon(Icons.shuffle, size: 24),
+                              label: const Text(
+                                'Random Battle!',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 8,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Load 2 random cards and compare HP',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white70 : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-          ),
-        );
-      },
+      ),
     );
   }
 

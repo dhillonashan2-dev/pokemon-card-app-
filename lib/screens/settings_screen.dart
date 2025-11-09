@@ -182,6 +182,12 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                         _buildDataCard(isDark),
                         const SizedBox(height: 16),
                         
+                        // Share & Social Section
+                        _buildSectionHeader('Share & Social', Icons.share),
+                        const SizedBox(height: 8),
+                        _buildShareCard(isDark),
+                        const SizedBox(height: 16),
+                        
                         // About Section
                         _buildSectionHeader('About', Icons.info_outline),
                         const SizedBox(height: 8),
@@ -370,6 +376,184 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
             subtitle: Text('Remove all $_favoriteCount favorites'),
             trailing: const Icon(Icons.chevron_right),
             onTap: _favoriteCount > 0 ? _clearAllFavorites : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShareCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: (isDark ? Colors.grey[850] : Colors.white)?.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.share, color: Colors.blue),
+            title: const Text('Share App'),
+            subtitle: const Text('Share this app with friends'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.share, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text('Share App'),
+                    ],
+                  ),
+                  content: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Share this awesome Pokémon Cards app with your friends!'),
+                      SizedBox(height: 16),
+                      Text(
+                        'GitHub: github.com/dhillonashan2-dev/pokemon-card-app-',
+                        style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Link copied to clipboard!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copy Link'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.people, color: Colors.green),
+            title: const Text('Invite Friends'),
+            subtitle: const Text('Challenge friends to collect cards'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.people, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('Invite Friends'),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Hey! Check out this cool Pokémon Cards app!'),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('✨ 300+ Pokémon cards'),
+                            Text('⚔️ Battle mode with HP comparison'),
+                            Text('💖 Save your favorite cards'),
+                            Text('🔍 Search and filter by type'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.star, color: Colors.amber),
+            title: const Text('Rate App'),
+            subtitle: Text('You have $_favoriteCount favorite cards!'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.star, color: Colors.amber),
+                      SizedBox(width: 8),
+                      Text('Rate This App'),
+                    ],
+                  ),
+                  content: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Enjoying the app?'),
+                      SizedBox(height: 8),
+                      Text('Give us a star on GitHub! ⭐'),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Maybe Later'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Thanks for your support! 🎉'),
+                            backgroundColor: Colors.amber,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.star),
+                      label: const Text('Rate Now'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

@@ -22,6 +22,14 @@ class PokemonCard {
   // Optional because not all cards specify rarity
   final String? rarity;
 
+  // HP (Hit Points) of the Pokémon (e.g., "120", "60")
+  // Optional because not all cards have HP (like Trainer cards)
+  final String? hp;
+
+  // Set name (e.g., "Base", "Jungle", "Fossil")
+  // Optional because not all cards specify set name
+  final String? setName;
+
   // Constructor: Creates a new PokemonCard object
   // Required fields must be provided, optional fields can be null
   PokemonCard({
@@ -31,6 +39,8 @@ class PokemonCard {
     this.largeImageUrl,
     this.type,
     this.rarity,
+    this.hp,
+    this.setName,
   });
 
   // Factory constructor: Creates a PokemonCard from JSON data
@@ -57,6 +67,12 @@ class PokemonCard {
         
         // Get the rarity, use empty string if not found
         rarity: json['rarity'] ?? '',
+        
+        // Get the HP value (important for battle comparisons!)
+        hp: json['hp'],
+        
+        // Get the set name from the nested 'set' object
+        setName: json['set']?['name'],
       );
     } catch (e) {
       // If something goes wrong while parsing, re-throw the error

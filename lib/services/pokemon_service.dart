@@ -28,6 +28,8 @@ class PokemonService {
         largeImageUrl: 'https://images.pokemontcg.io/base1/${i}_hires.png', // High-res image
         type: _getPokemonType(i), // Assign a type (Fire, Water, etc.)
         rarity: _getRarity(i), // Assign rarity (Common, Rare, etc.)
+        hp: _getHP(i), // Assign HP for battle comparisons
+        setName: 'Base Set',
       ));
     }
     
@@ -40,6 +42,8 @@ class PokemonService {
         largeImageUrl: 'https://images.pokemontcg.io/base2/${i}_hires.png',
         type: _getPokemonType(i),
         rarity: _getRarity(i),
+        hp: _getHP(i + 100), // Offset HP calculation for variety
+        setName: 'Jungle',
       ));
     }
     
@@ -52,6 +56,8 @@ class PokemonService {
         largeImageUrl: 'https://images.pokemontcg.io/base3/${i}_hires.png',
         type: _getPokemonType(i),
         rarity: _getRarity(i),
+        hp: _getHP(i + 200), // Offset HP calculation for variety
+        setName: 'Fossil',
       ));
     }
     
@@ -65,6 +71,8 @@ class PokemonService {
         largeImageUrl: 'https://images.pokemontcg.io/base4/${i}_hires.png',
         type: _getPokemonType(i),
         rarity: _getRarity(i),
+        hp: _getHP(i + 300), // Offset HP calculation for variety
+        setName: 'Team Rocket',
       ));
     }
     
@@ -136,6 +144,18 @@ class PokemonService {
     if (num % 7 == 0) return 'Rare'; // Every 7th card is rare
     if (num % 3 == 0) return 'Uncommon'; // Every 3rd card is uncommon
     return 'Common'; // All other cards are common
+  }
+
+  // Helper function to assign HP values to cards for battle comparisons
+  // Generates realistic HP values between 30-120 based on card number
+  String _getHP(int num) {
+    // Create varied HP values based on card number
+    if (num % 15 == 0) return '120'; // Rare holos get high HP
+    if (num % 7 == 0) return '100';  // Rare cards get good HP
+    if (num % 5 == 0) return '90';   // Some cards get 90 HP
+    if (num % 3 == 0) return '70';   // Uncommon cards get 70 HP
+    if (num % 2 == 0) return '60';   // Even numbered cards get 60 HP
+    return '${30 + (num % 10) * 10}'; // Others get 30-120 HP based on number
   }
 
   // Main function to fetch Pokémon cards from the API
